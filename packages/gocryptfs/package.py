@@ -1,5 +1,3 @@
-import shutil
-
 from lib.dependency import Dependency
 from lib.package import Package
 
@@ -19,12 +17,7 @@ class Gocryptfs(Package):
     ]
 
     def build(self):
-        self.run_cmd(["./build-without-openssl.bash"], cwd=self.build_dir)
+        self.run_cmd([str(self.build_dir / "build-without-openssl.bash")], cwd=self.build_dir)
 
     def install(self):
-        bin_src = self.build_dir / "gocryptfs"
-        bin_dst = self.prefix / "bin"
-
-        bin_dst.mkdir(parents=True, exist_ok=True)
-
-        shutil.copy2(bin_src, bin_dst / "gocryptfs")
+        self.install_binary(self.build_dir / "gocryptfs")

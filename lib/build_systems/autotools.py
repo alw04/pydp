@@ -23,15 +23,16 @@ class AutotoolsPackage(Package):
                 self.append_env("CPPFLAGS", f"-I{include}")
 
             for libdir in ("lib", "lib64"):
-                lib = prefix / libdir
-                if lib.is_dir():
-                    self.append_env("LDFLAGS", f"-L{lib} -Wl,-rpath,{lib}")
+                lib_path = prefix / libdir
+                if lib_path.is_dir():
+                    self.append_env("LDFLAGS", f"-L{lib_path} -Wl,-rpath,{lib_path}")
 
-                pkgconfig = lib / "pkgconfig"
+                pkgconfig = lib_path / "pkgconfig"
                 if pkgconfig.is_dir():
                     self.append_env("PKG_CONFIG_PATH", str(pkgconfig), sep=":")
 
-    configure_directory = "."
+        for lib_name in self.link_libs:
+            self.append_env("LDFLAGS", f"-l{lib_name}")
 
     def configure_args(self) -> list[str]:
         return []
@@ -43,15 +44,14 @@ class AutotoolsPackage(Package):
         return []
 
     def configure(self):
+        configure = self.build_dir / "configure"
         self.run_cmd(
-            ["./configure", f"--prefix={self.prefix}", *self.configure_args()],
-            cwd=self.build_dir / self.configure_directory,
+            [str(configure), f"--prefix={self.prefix}", *self.configure_args()],
+            cwd=self.build_dir,
         )
 
     def build(self):
-        self.run_cmd(
-            ["make", f"-j{self.build_jobs()}", *self.make_args()], cwd=self.build_dir / self.configure_directory
-        )
+        self.run_cmd(["make", f"-j{self.build_jobs()}", *self.make_args()], cwd=self.build_dir)
 
     def install(self):
-        self.run_cmd(["make", "install", *self.install_args()], cwd=self.build_dir / self.configure_directory)
+        self.run_cmd(["make", "install", *self.install_args()], cwd=self.build_dir)

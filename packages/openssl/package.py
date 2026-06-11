@@ -14,4 +14,7 @@ class Openssl(AutotoolsPackage):
     ]
 
     def configure(self):
-        self.run_cmd(["./Configure", f"--prefix={self.prefix}", f"--openssldir={self.prefix}/ssl"], cwd=self.build_dir)
+        self.run_cmd(
+            [str(self.build_dir / "Configure"), f"--prefix={self.prefix}", f"--openssldir={self.prefix}/ssl"],
+            cwd=self.build_dir,
+        )

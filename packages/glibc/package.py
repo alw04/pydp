@@ -11,3 +11,9 @@ class Glibc(AutotoolsPackage):
     versions = [
         "2.39",
     ]
+
+    source_subdir = "build"
+
+    def configure(self):
+        self.build_dir.mkdir(parents=True, exist_ok=True)
+        self.run_cmd([str(self.build_path / "configure"), f"--prefix={self.prefix}"], cwd=self.build_dir)

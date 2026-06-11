@@ -1,4 +1,3 @@
-import shutil
 from lib.dependency import Dependency
 from lib.package import Package
 
@@ -21,10 +20,7 @@ class Ninja(Package):
     ]
 
     def build(self):
-        self.run_cmd(["python", "configure.py", "--bootstrap"], cwd=self.build_dir)
+        self.run_cmd([str(self.build_dir / "configure.py"), "--bootstrap"], cwd=self.build_dir)
 
     def install(self):
-        bin_dir = self.prefix / "bin"
-        bin_dir.mkdir(parents=True, exist_ok=True)
-
-        shutil.copy2(self.build_dir / "ninja", bin_dir / "ninja")
+        self.install_binary(self.build_dir / "ninja")

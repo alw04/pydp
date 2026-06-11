@@ -6,7 +6,6 @@ class Meson(PythonPackage):
     extremely fast, and as user friendly as possible."""
 
     homepage = "https://mesonbuild.com/"
-    url = "https://github.com/mesonbuild/meson/archive/{version}.tar.gz"
 
     versions = [
         "1.8.2",

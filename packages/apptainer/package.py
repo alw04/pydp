@@ -25,7 +25,7 @@ class Apptainer(AutotoolsPackage):
     def configure(self):
         self.run_cmd(
             [
-                "./mconfig",
+                str(self.build_dir / "mconfig"),
                 f"--prefix={self.prefix}",
                 "--localstatedir=/var",
                 f"--sysconfdir={self.prefix}/etc",

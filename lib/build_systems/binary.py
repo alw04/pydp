@@ -1,5 +1,3 @@
-import shutil
-
 from lib.package import Package
 
 
@@ -13,4 +11,4 @@ class BinaryPackage(Package):
     )
 
     def install(self):
-        shutil.copytree(self.build_dir, self.prefix, dirs_exist_ok=True)
+        self.install_directory(self.build_dir, self.prefix)

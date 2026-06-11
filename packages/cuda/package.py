@@ -22,8 +22,8 @@ class Cuda(Package):
     )
 
     def install(self):
-        installer = self.download_path
+        installer = self.download_file
 
         installer.chmod(0o755)
 
-        self.run_cmd([str(installer), "--silent", "--toolkit", f"--toolkitpath={self.prefix}"], cwd=self.download_dir)
+        self.run_cmd([str(installer), "--silent", "--toolkit", f"--toolkitpath={self.prefix}"])

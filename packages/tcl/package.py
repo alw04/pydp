@@ -15,7 +15,7 @@ class Tcl(AutotoolsPackage):
         "8.6.11",
     ]
 
-    configure_directory = "unix"
+    source_subdir = "unix"
 
     def configure_args(self):
         return [

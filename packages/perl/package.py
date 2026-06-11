@@ -13,4 +13,6 @@ class Perl(AutotoolsPackage):
     ]
 
     def configure(self):
-        self.run_cmd(["./Configure", "-des", f"-Dprefix={self.prefix}", "-Dusethreads"], cwd=self.build_dir)
+        self.run_cmd(
+            [str(self.build_dir / "Configure"), "-des", f"-Dprefix={self.prefix}", "-Dusethreads"], cwd=self.build_dir
+        )

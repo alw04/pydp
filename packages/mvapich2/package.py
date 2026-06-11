@@ -12,3 +12,8 @@ class Mvapich2(AutotoolsPackage):
     versions = [
         "2.3.7",
     ]
+
+    def configure_args(self):
+        return [
+            "FFLAGS=-fallow-argument-mismatch",
+        ]

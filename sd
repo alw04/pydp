@@ -1,4 +1,8 @@
+#!/usr/bin/env python3
+
 import argparse
+import math
+import shutil
 import textwrap
 from pathlib import Path
 
@@ -21,39 +25,39 @@ class Context:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        prog="cli.py",
         formatter_class=argparse.RawDescriptionHelpFormatter,
+        description="Build and install software packages and containers",
         epilog=textwrap.dedent(
             """\
             Examples:
                 # Install individual packages
-                python3 cli.py install python
-                python3 cli.py install python r gcc@15.2.0
+                %(prog)s install python
+                %(prog)s install python r gcc@15.2.0
 
                 # Install from groups
-                python3 cli.py install --group common
-                python3 cli.py install --group common --group sequence_tools
+                %(prog)s install --group common
+                %(prog)s install --group common --group sequence_tools
 
                 # Mix packages and groups
-                python3 cli.py install python --group common
-                python3 cli.py install python gcc --group common --group sequence_tools
+                %(prog)s install python --group common
+                %(prog)s install python gcc --group common --group sequence_tools
 
                 # Force rebuild
-                python3 cli.py install python --force
-                python3 cli.py install python --group common --force
+                %(prog)s install python --force
+                %(prog)s install python --group common --force
 
                 # Dry run (show what would be installed)
-                python3 cli.py install python gcc --dry-run
-                python3 cli.py install --group common --dry-run
+                %(prog)s install python gcc --dry-run
+                %(prog)s install --group common --dry-run
 
                 # List available packages
-                python3 cli.py list
-                python3 cli.py list --group common
-                python3 cli.py list --group common --group sequence_tools
+                %(prog)s list
+                %(prog)s list --group common
+                %(prog)s list --group common --group sequence_tools
 
                 # Show package info
-                python3 cli.py info python
-                python3 cli.py info python@3.14.0
+                %(prog)s info python
+                %(prog)s info python@3.14.0
             """
         ),
     )
@@ -73,7 +77,7 @@ def parse_args() -> argparse.Namespace:
     )
     install_parser.add_argument(
         "packages",
-        nargs="+",
+        nargs="*",
         metavar="package[@version]",
         help="Package(s) to install (e.g. python gcc@15.2.0)",
     )
@@ -110,7 +114,12 @@ def parse_args() -> argparse.Namespace:
     info_parser.add_argument("package", metavar="package[@version]", help="Package to inspect (e.g. r or r@4.5.1)")
     info_parser.set_defaults(handler=cmd_info)
 
-    return parser.parse_args()
+    args = parser.parse_args()
+
+    if args.command == "install" and not (args.packages or args.group):
+        parser.error("install requires at least one package or -g/--group")
+
+    return args
 
 
 def install_package(pkg: Package, installed: dict):
@@ -153,13 +162,30 @@ def cmd_list(ctx: Context):
         print("No packages found in the registry.")
         return
 
-    for pkg_name, pkg_cls in sorted(PACKAGE_REGISTRY.items()):
-        try:
-            pkg_version = pkg_cls.default_version()
-        except ValueError:
-            pkg_version = "undefined"
+    package_names = sorted(PACKAGE_REGISTRY.keys())
 
-        print(pkg_name, pkg_version)
+    width = shutil.get_terminal_size((80, 20)).columns
+
+    longest_name = max(len(n) for n in package_names) if package_names else 1
+
+    MIN_COL_WIDTH = 20
+    padding = 4
+    col_width = max(MIN_COL_WIDTH, longest_name + padding)
+
+    cols = max(1, width // col_width)
+    rows = math.ceil(len(package_names) / cols)
+
+    grid = []
+    for r in range(rows):
+        row = []
+        for c in range(cols):
+            idx = r + c * rows
+            if idx < len(package_names):
+                row.append(package_names[idx].ljust(col_width))
+        grid.append(row)
+
+    for row in grid:
+        print("".join(row))
 
 
 def cmd_info(ctx: Context):
@@ -168,11 +194,20 @@ def cmd_info(ctx: Context):
 
     INDENT = "    "
 
+    try:
+        default_version = pkg_cls.default_version()
+    except ValueError:
+        default_version = "undefined"
+
+    homepage = pkg_cls.homepage or "(none)"
+
     description = pkg_cls.description().replace("\n", f"\n{INDENT}")
-    versions = "\n".join(f"{INDENT}{v}" for v in pkg_cls.versions)
+
+    versions = "\n".join(f"{INDENT}{v}" for v in pkg_cls.versions) if pkg_cls.versions else f"{INDENT}(none)"
+
     deps = (
-        "\n".join(f"{INDENT}{d.name} [{', '.join(d.types)}]" for d in pkg_cls.depends_on)
-        if pkg_cls.depends_on
+        "\n".join(f"{INDENT}{d.name} [{', '.join(d.types)}]" for d in pkg_cls.dependencies_spec())
+        if pkg_cls.dependencies_spec()
         else f"{INDENT}(none)"
     )
 
@@ -182,10 +217,10 @@ Package: {spec.name}
 Description:
     {description}
 
-Homepage: {pkg_cls.homepage}
+Homepage: {homepage}
 
 Default Version:
-    {pkg_cls.default_version()}
+    {default_version}
 
 Versions:
 {versions}

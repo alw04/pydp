@@ -19,7 +19,7 @@ class Tk(AutotoolsPackage):
         Dependency("tcl", type=("link", "run")),
     ]
 
-    configure_directory = "unix"
+    source_subdir = "unix"
 
     def configure_args(self):
         return [

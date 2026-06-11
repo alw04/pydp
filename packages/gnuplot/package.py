@@ -1,4 +1,5 @@
 from lib.build_systems.autotools import AutotoolsPackage
+from lib.dependency import Dependency
 
 
 class Gnuplot(AutotoolsPackage):
@@ -19,3 +20,16 @@ class Gnuplot(AutotoolsPackage):
     versions = [
         "6.0.0",
     ]
+
+    depends_on = [
+        Dependency("libcerf"),
+        Dependency("cairo"),
+        Dependency("pango"),
+        Dependency("readline"),
+        Dependency("libgd"),
+    ]
+
+    def configure_args(self):
+        return [
+            "--without-qt",
+        ]

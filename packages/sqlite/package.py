@@ -15,3 +15,8 @@ class Sqlite(AutotoolsPackage):
     versions = [
         "3.50.4",
     ]
+
+    def configure_args(self):
+        return [
+            "CFLAGS=-DSQLITE_ENABLE_RTREE=1",
+        ]

@@ -1,7 +1,7 @@
 from lib.package import Package
 
 
-class MakePackage(Package):
+class MakefilePackage(Package):
     abstract = True
 
     phases = (
@@ -17,9 +17,6 @@ class MakePackage(Package):
 
     def install_args(self) -> list[str]:
         return []
-
-    def configure(self):
-        pass
 
     def build(self):
         self.run_cmd(["make", f"-j{self.build_jobs()}", *self.make_args()], cwd=self.build_dir)

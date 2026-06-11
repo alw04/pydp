@@ -40,16 +40,29 @@ class CMakePackage(Package):
                 if pkgconfig.is_dir():
                     self.append_env("PKG_CONFIG_PATH", str(pkgconfig), sep=":")
 
+    def extra_module_paths(self):
+        return {
+            "CMAKE_PREFIX_PATH": [self.prefix],
+        }
+
     def cmake_args(self) -> list[str]:
         return []
 
     def configure(self):
         self.run_cmd(
-            ["cmake", "-B", "build", f"-DCMAKE_INSTALL_PREFIX={self.prefix}", *self.cmake_args()], cwd=self.build_dir
+            [
+                "cmake",
+                "-S",
+                str(self.build_dir),
+                "-B",
+                str(self.build_path / "build"),
+                f"-DCMAKE_INSTALL_PREFIX={self.prefix}",
+                *self.cmake_args(),
+            ],
         )
 
     def build(self):
-        self.run_cmd(["cmake", "--build", "build", "--parallel", str(self.build_jobs())], cwd=self.build_dir)
+        self.run_cmd(["cmake", "--build", str(self.build_path / "build"), "--parallel", str(self.build_jobs())])
 
     def install(self):
-        self.run_cmd(["cmake", "--install", "build"], cwd=self.build_dir)
+        self.run_cmd(["cmake", "--install", str(self.build_path / "build")])
